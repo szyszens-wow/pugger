@@ -1,0 +1,7 @@
+## Interface: 30300
+## Title: Pug Raid Gatherer
+## Notes: Analyzes raid group and announces missing people in given channels.
+## Author: Piotrus
+## Version: 1.0
+
+Pugger.lua
