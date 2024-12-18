@@ -34,24 +34,27 @@ local function AnnounceRaidCount(raidName, additional, channel)
     local numPlayers = GetNumGroupMembers()
     local group5Count = 0
     local tankCount = 0
-    
+    local toKick = 0
     for i = 1, GetNumGroupMembers() do
         local name, rank, subgroup, _, _, _, _, _, _, role = GetRaidRosterInfo(i)
         if role == "MAINTANK" or role == "MAINASSIST" then
             tankCount = tankCount + 1
         end
-       
+
         if subgroup == 5 then
             group5Count = group5Count + 1
         end
+		if subgroup == 7 or subgroup == 8 then
+			toKick = toKick + 1
+		end
     end
-        
+
     local requiredMembers = "Need"
     local reqTanks = 2
     if tankCount < 2 then
         requiredMembers = requiredMembers .. " tank"
     end
-    
+
     local reqHealers = 2
     if raidSize > 20 then
         reqHealers = 5
@@ -59,14 +62,13 @@ local function AnnounceRaidCount(raidName, additional, channel)
     if group5Count < reqHealers then
         requiredMembers = requiredMembers .. " heal"
     end
-    
+
     local dpsCount = numPlayers - group5Count - tankCount
     local reqDpses = raidSize - reqHealers - reqTanks - dpsCount
-    if reqDpses > 0 then
+    if reqDpses + toKick> 0 then
         requiredMembers = requiredMembers .. " dps"
     end
-    
-    local message = string.format("LFM %s %s /w me spec gs (%d/%d) %s", tostring(raidName), requiredMembers, numPlayers, raidSize, tostring(additional))
+    local message = string.format("LFM %s %s /w me spec gs (%d/%d) %s", tostring(raidName), requiredMembers, numPlayers-toKick, raidSize, tostring(additional))
     if channel == nil or channel == "" then
         SendChatMessage(message, "RAID")
         return
@@ -76,10 +78,16 @@ local function AnnounceRaidCount(raidName, additional, channel)
         SendChatMessage(message, channel)
         return
     end
+	print(channel)
+
+	SendChatMessage(message, "CHANNEL", nil, channel)
+
+
 end
 
 -- UI Setup
 local frame = CreateFrame("Frame", "PuggerFrame", UIParent)
+frame:Hide()
 frame:SetSize(300, 360)
 frame:SetPoint("CENTER", UIParent, "CENTER")
 frame:SetBackdrop({
@@ -126,6 +134,7 @@ local additionalInput = CreateFrame("EditBox", nil, frame, "InputBoxTemplate")
 additionalInput:SetSize(180, 30)
 additionalInput:SetPoint("TOPLEFT", additionalLabel, "BOTTOMLEFT", 0, -10)
 additionalInput:SetAutoFocus(false)
+
 
 -- Channel Input
 local channelLabel = frame:CreateFontString(nil, "OVERLAY")
